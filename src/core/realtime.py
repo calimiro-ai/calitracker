@@ -20,6 +20,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from core.dataset_builder import FeatureExtractor
 from core.realtime_pipeline import ExerciseClassifier
+from core.frontend_interface import update_workout_state
 
 
 class RealTimePeakDetector:
@@ -315,6 +316,10 @@ class WebcamRealtimeWithRepsPipeline:
                 try:
                     while not self.result_queue.empty():
                         exercise, confidence, probability = self.result_queue.get_nowait()
+                        # Update frontend if exercise changes
+                        if exercise != self.current_exercise:
+                            self._update_frontend_state()
+                        
                         self.current_exercise = exercise
                         self.exercise_confidence = confidence
                         self.current_probability = probability
@@ -324,6 +329,8 @@ class WebcamRealtimeWithRepsPipeline:
                             rep_detected = self.rep_counters[exercise].update(self.frame_count, probability)
                             if rep_detected:
                                 print(f"REP DETECTED! {exercise}: {self.rep_counters[exercise].get_rep_count()}")
+                                # Update frontend when rep is detected
+                                self._update_frontend_state()
                 except:
                     pass
                 
@@ -483,6 +490,19 @@ class WebcamRealtimeWithRepsPipeline:
         for counter in self.rep_counters.values():
             counter.reset()
         print("All rep counts reset!")
+        # Update frontend after reset
+        self._update_frontend_state()
+    
+    def _update_frontend_state(self):
+        """Update frontend with current workout state."""
+        # Get total reps for each exercise
+        total_reps = {
+            exercise: counter.get_rep_count()
+            for exercise, counter in self.rep_counters.items()
+        }
+        
+        # Call frontend update function
+        update_workout_state(total_reps, self.current_exercise)
     
     def _print_results(self):
         """Print final analysis results."""
