@@ -1,6 +1,5 @@
 # Data directories
-data/
-test_videos/
+data/processed/
 output_videos/
 
 # Python
