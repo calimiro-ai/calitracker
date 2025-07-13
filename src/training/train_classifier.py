@@ -15,10 +15,10 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
 from sklearn.model_selection import train_test_split
 
-from .classification.model import build_exercise_classification_model
+from classification.model import build_exercise_classification_model
 
 
-def load_classification_dataset(path: str = 'data/processed/classification_dataset.npz'):
+def load_classification_dataset(path: str = '../../data/processed/classification_dataset.npz'):
     """Load classification dataset with features and exercise type labels."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"Dataset file not found: {path}")
@@ -91,8 +91,8 @@ def train_model(X_train, y_train, X_val, y_val, class_names,
     
     # Configure callbacks
     timestamp = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-    logdir = os.path.join('logs', f'classifier_{timestamp}')
-    model_path = 'models/classification/exercise_classifier.keras'
+    logdir = os.path.join('../../logs', f'classifier_{timestamp}')
+    model_path = '../../models/classification/exercise_classifier.keras'
     
     callbacks = [
         TensorBoard(log_dir=logdir, histogram_freq=1),

@@ -157,6 +157,9 @@ def train_model(args):
         if not args.exercise:
             raise ValueError("Exercise type required for segmentation mode")
         
+        import sys
+        import os
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'training'))
         from segmentation.trainer import load_frame_dataset, create_sequences, SegmentationTrainer
         
         # Determine dataset path

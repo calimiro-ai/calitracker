@@ -10,7 +10,10 @@ import os
 import numpy as np
 import cv2
 import mediapipe as mp
-from src.utils.video_labeler import VideoSegmenter
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from utils.video_labeler import VideoSegmenter
 
 
 class LabelAugmenter:
@@ -183,7 +186,7 @@ class SegmentationDatasetBuilder:
         """
         self.videos_dir = videos_dir
         self.labels_dir = labels_dir
-        self.augmenter = LabelAugmenter(fps)
+        self.augmenter = LabelAugmenter(fps, margin_sec=0.3)  # Increased from 0.1s to 0.3s
         self.extractor = FeatureExtractor()
         self.segmenter = VideoSegmenter(videos_dir=videos_dir, labels_dir=labels_dir)
 

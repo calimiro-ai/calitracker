@@ -43,7 +43,8 @@ def load_frame_dataset(path: str = 'dataset.npz') -> Tuple[np.ndarray, np.ndarra
 def create_sequences(
     X_frames: np.ndarray,
     y_frames: np.ndarray,
-    window_size: int
+    window_size: int,
+    stride: int = 1
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     Create sliding window sequences from frame data.
@@ -52,25 +53,27 @@ def create_sequences(
         X_frames: Feature array of shape (total_frames, num_features)
         y_frames: Label array of shape (total_frames,)
         window_size: Length of time windows in frames
+        stride: Stride between windows (1 = overlapping, window_size = non-overlapping)
 
     Returns:
         X_seq: Sequence array of shape (num_windows, window_size, num_features)
         y_seq: Label array of shape (num_windows, window_size, 1)
     """
     num_frames, num_features = X_frames.shape
-    num_windows = num_frames // window_size
+    num_windows = (num_frames - window_size) // stride + 1
     
-    if num_windows == 0:
+    if num_windows <= 0:
         raise ValueError(f"Video too short: {num_frames} frames, need at least {window_size}")
     
-    # Create non-overlapping windows
-    X_seq = np.array([X_frames[i*window_size:(i+1)*window_size]
+    # Create overlapping windows with stride
+    X_seq = np.array([X_frames[i*stride:i*stride+window_size]
                       for i in range(num_windows)])
-    y_seq = np.array([y_frames[i*window_size:(i+1)*window_size].reshape(-1, 1)
+    y_seq = np.array([y_frames[i*stride:i*stride+window_size].reshape(-1, 1)
                       for i in range(num_windows)])
     
     print(f"Created sequences: X_seq={X_seq.shape}, y_seq={y_seq.shape}")
     print(f"Positive windows: {np.sum(np.any(y_seq > 0.5, axis=1))} ({np.sum(np.any(y_seq > 0.5, axis=1))/len(y_seq)*100:.1f}%)")
+    print(f"Window overlap: {window_size - stride} frames")
     
     return X_seq, y_seq
 

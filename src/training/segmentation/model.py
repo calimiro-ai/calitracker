@@ -59,7 +59,7 @@ def build_exercise_segmentation_model(
     num_filters=32,
     kernel_size=3,
     num_layers=4,
-    dropout_rate=0.1,
+    dropout_rate=0.1,  # Keep dropout for regularization
     learning_rate=1e-4
 ):
     """
@@ -103,11 +103,11 @@ def build_exercise_segmentation_model(
     # Create model
     model = models.Model(inputs, outputs, name='tcn_segmenter')
 
-    # Compile with focal loss for class imbalance
+    # Compile with focal loss for class imbalance - adjusted for more confidence
     loss = BinaryFocalCrossentropy(
         from_logits=False,
-        alpha=0.25,
-        gamma=2.0
+        alpha=0.5,  # Increased from 0.25 to give more weight to positive samples
+        gamma=1.5   # Reduced from 2.0 to be less aggressive on easy negatives
     )
     optimizer = optimizers.Adam(learning_rate=learning_rate)
 
