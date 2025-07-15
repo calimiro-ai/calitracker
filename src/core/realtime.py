@@ -241,6 +241,7 @@ class WebcamRealtimeWithRepsPipeline:
         # Threading
         self.feature_queue = Queue(maxsize=100)  # Buffer for features
         self.result_queue = Queue(maxsize=10)    # Buffer for results
+        self.paused = False # Is the workout session paused?
         self.running = True
         
         # Performance tracking
@@ -424,63 +425,67 @@ class WebcamRealtimeWithRepsPipeline:
         overlay = frame.copy()
         cv2.rectangle(overlay, (0, 0), (width, 180), (0, 0, 0), -1)
         cv2.addWeighted(overlay, 0.3, frame, 0.7, 0, frame)
-        
-        # Exercise information
-        exercise_text = f"Exercise: {self.current_exercise.upper()}"
-        confidence_text = f"Confidence: {self.exercise_confidence:.3f}"
-        probability_text = f"Rep Probability: {self.current_probability:.3f}"
-        
-        # Color based on confidence
-        if self.exercise_confidence > 0.7:
-            color = (0, 255, 0)  # Green
-        elif self.exercise_confidence > 0.5:
-            color = (0, 255, 255)  # Yellow
+
+        if self.paused:
+            cv2.putText(frame, "PAUSED", (10, 10, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2))
+
         else:
-            color = (0, 0, 255)  # Red
-        
-        cv2.putText(frame, exercise_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
-                   0.8, color, 2)
-        cv2.putText(frame, confidence_text, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 
-                   0.6, (255, 255, 255), 2)
-        
-        # Segmentation probability with color coding
-        if self.current_probability > 0.7:
-            prob_color = (0, 255, 0)  # Green - high probability of rep
-        elif self.current_probability > 0.5:
-            prob_color = (0, 255, 255)  # Yellow - medium probability
-        else:
-            prob_color = (0, 0, 255)  # Red - low probability
-        
-        cv2.putText(frame, probability_text, (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 
-                   0.6, prob_color, 2)
-        
-        # Rep counting information
-        if self.current_exercise in self.rep_counters:
-            counter = self.rep_counters[self.current_exercise]
-            rep_count = counter.get_rep_count()
-            avg_rep_time = counter.get_avg_rep_time()
-            
-            rep_text = f"Reps: {rep_count}"
-            cv2.putText(frame, rep_text, (10, 120), cv2.FONT_HERSHEY_SIMPLEX, 
-                       0.8, (255, 255, 0), 2)  # Yellow for rep count
-            
-            if avg_rep_time > 0:
-                time_text = f"Avg Time: {avg_rep_time:.1f}s"
-                cv2.putText(frame, time_text, (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 
-                           0.6, (255, 255, 255), 2)
-        
-        # Performance metrics
-        if self.processing_times:
-            avg_time = np.mean(self.processing_times) * 1000  # Convert to ms
-            cv2.putText(frame, f"Model FPS: {1000/avg_time:.1f}", (width - 150, 30), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-        
-        # Webcam FPS
-        if self.fps_times:
-            webcam_fps = 1.0 / np.mean(self.fps_times)
-            cv2.putText(frame, f"Webcam FPS: {webcam_fps:.1f}", (width - 150, 55), 
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-        
+            # Exercise information
+            exercise_text = f"Exercise: {self.current_exercise.upper()}"
+            confidence_text = f"Confidence: {self.exercise_confidence:.3f}"
+            probability_text = f"Rep Probability: {self.current_probability:.3f}"
+
+            # Color based on confidence
+            if self.exercise_confidence > 0.7:
+                color = (0, 255, 0)  # Green
+            elif self.exercise_confidence > 0.5:
+                color = (0, 255, 255)  # Yellow
+            else:
+                color = (0, 0, 255)  # Red
+
+            cv2.putText(frame, exercise_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
+                       0.8, color, 2)
+            cv2.putText(frame, confidence_text, (10, 60), cv2.FONT_HERSHEY_SIMPLEX,
+                       0.6, (255, 255, 255), 2)
+
+            # Segmentation probability with color coding
+            if self.current_probability > 0.7:
+                prob_color = (0, 255, 0)  # Green - high probability of rep
+            elif self.current_probability > 0.5:
+                prob_color = (0, 255, 255)  # Yellow - medium probability
+            else:
+                prob_color = (0, 0, 255)  # Red - low probability
+
+            cv2.putText(frame, probability_text, (10, 90), cv2.FONT_HERSHEY_SIMPLEX,
+                       0.6, prob_color, 2)
+
+            # Rep counting information
+            if self.current_exercise in self.rep_counters:
+                counter = self.rep_counters[self.current_exercise]
+                rep_count = counter.get_rep_count()
+                avg_rep_time = counter.get_avg_rep_time()
+
+                rep_text = f"Reps: {rep_count}"
+                cv2.putText(frame, rep_text, (10, 120), cv2.FONT_HERSHEY_SIMPLEX,
+                           0.8, (255, 255, 0), 2)  # Yellow for rep count
+
+                if avg_rep_time > 0:
+                    time_text = f"Avg Time: {avg_rep_time:.1f}s"
+                    cv2.putText(frame, time_text, (10, 150), cv2.FONT_HERSHEY_SIMPLEX,
+                               0.6, (255, 255, 255), 2)
+
+            # Performance metrics
+            if self.processing_times:
+                avg_time = np.mean(self.processing_times) * 1000  # Convert to ms
+                cv2.putText(frame, f"Model FPS: {1000/avg_time:.1f}", (width - 150, 30),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
+            # Webcam FPS
+            if self.fps_times:
+                webcam_fps = 1.0 / np.mean(self.fps_times)
+                cv2.putText(frame, f"Webcam FPS: {webcam_fps:.1f}", (width - 150, 55),
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+
         # Instructions
         cv2.putText(frame, "Press 'q' to quit, 'r' to reset", (10, 170), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
@@ -500,9 +505,16 @@ class WebcamRealtimeWithRepsPipeline:
             exercise: counter.get_rep_count()
             for exercise, counter in self.rep_counters.items()
         }
-        
+
+
         # Call frontend update function
-        update_workout_state(total_reps, self.current_exercise)
+        paused, stopped = update_workout_state(total_reps, self.current_exercise)
+
+        self.paused = paused # Implement paused logic
+        # self.running = not stopped
+
+
+
     
     def _print_results(self):
         """Print final analysis results."""

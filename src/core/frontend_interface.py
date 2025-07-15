@@ -6,8 +6,18 @@ This module provides functions for interacting with the frontend interface.
 Currently contains placeholder functions that will be implemented by the frontend team.
 """
 
-import json
+import requests
+import sys
 from typing import Dict
+
+
+# By default in the frontend the port for server running is defined as 8080
+# Check https://github.com/ixodev/magicmirror/blob/master/config/config.js
+PORT = 8080
+# Has also to be synced with the frontend
+# Check https://github.com/ixodev/magicmirror/blob/master/modules/MMM-WorkoutTracker/node_helper.js
+ROUTE = "workout-tracking"
+OK = 200
 
 
 def update_workout_state(total_reps: Dict[str, int], current_exercise: str) -> None:
@@ -36,10 +46,22 @@ def update_workout_state(total_reps: Dict[str, int], current_exercise: str) -> N
         "total_reps": total_reps,
         "timestamp": None  # Can be added if needed
     }
-    
-    # Convert to JSON string
-    workout_state_json = json.dumps(workout_state, indent=2)
-    
-    print(f"[FRONTEND] Updating workout state:")
-    print(f"JSON payload:")
-    print(workout_state_json)
+
+    # Make a POST request to the frontend with workout_state as JSON payload
+    rep = rq.post(f"http://localhost:{PORT}/{ROUTE}", json=workout_state)
+
+    if rep.status_code != OK:
+        print(f"Error: could not POST to localhost:{PORT}", file=sys.stderr)
+
+    try:
+        result = json.loads(rep.text)
+    except Exception as ex:
+        print(f"Error: could not deserialize JSON, reason: {ex}", file=sys.stderr)
+        return (False, False)
+
+    paused = result["paused"] # is the workout session paused?
+    stopped = result["stopped"] # is the workout session stopped?
+
+    return paused, stopped
+
+
