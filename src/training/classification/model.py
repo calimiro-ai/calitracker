@@ -8,8 +8,6 @@ import tensorflow as tf
 from tensorflow.keras import layers, models, optimizers, metrics
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 from tensorflow.keras.utils import plot_model
-# Add this import for focal loss
-from tensorflow_addons.losses import CategoricalFocalCrossentropy
 
 
 def ResidualTCNBlock(x, filters, kernel_size, dilation_rate, dropout_rate=0.0):
@@ -116,12 +114,8 @@ def build_exercise_classification_model(
     # Create model
     model = models.Model(inputs, outputs, name='tcn_classifier')
 
-    # Compile with focal loss for multi-class classification
-    loss = CategoricalFocalCrossentropy(
-        from_logits=False,
-        alpha=0.75,
-        gamma=1.0
-    )
+    # Compile with categorical crossentropy for multi-class classification
+    loss = SparseCategoricalCrossentropy(from_logits=False)
     optimizer = optimizers.Adam(learning_rate=learning_rate)
 
     model.compile(
