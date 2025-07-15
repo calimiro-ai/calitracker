@@ -106,8 +106,8 @@ def build_exercise_segmentation_model(
     # Compile with focal loss for class imbalance - adjusted for more confidence
     loss = BinaryFocalCrossentropy(
         from_logits=False,
-        alpha=0.5,  # Increased from 0.25 to give more weight to positive samples
-        gamma=1.5   # Reduced from 2.0 to be less aggressive on easy negatives
+        alpha=1.0,  # Increased to give much more weight to positive samples
+        gamma=0.5   # Reduced to be much less aggressive on easy negatives
     )
     optimizer = optimizers.Adam(learning_rate=learning_rate)
 
