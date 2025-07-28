@@ -20,7 +20,7 @@ PORT_FRONTEND = 8080
 WORKOUT_SESSION_STATE = "/workout-session-state"
 WORKOUT_SESSION_START = "/workout-session-start"
 WORKOUT_LOADING_EXERCISES_FINISHED = "/workout-loading-exercises-finished"
-SET_MANUAL_EXERCISE = "/set-manual-exercise"
+SET_MANUAL_EXERCISE = "/set-manual-exercise" # Additional feature
 
 # Store the different routes
 GET_REQUESTS = [WORKOUT_SESSION_START]

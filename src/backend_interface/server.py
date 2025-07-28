@@ -91,9 +91,6 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 for key in data:
                     self.server.shared_data.update(key, data[key])
 
-            elif self.path == SET_MANUAL_EXERCISE:
-                self.server.shared_data.update("current_selected_exercise", data["current_selected_exercise"])
-
         except Exception as ex:
 
             # Error (JSON could not be deserialized)
